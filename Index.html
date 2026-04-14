@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณเงินเดือนและ OT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            cursor: pointer;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary { background: var(--primary-color); color: white; width: 100%; }
+        .btn-danger { background: var(--danger-color); color: white; }
+        .btn-outline { background: transparent; border: 1px solid #cbd5e1; color: var(--secondary-color); }
+
+        /* Table Style */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            min-width: 600px;
+        }
+
+        th {
+            background: #f1f5f9;
+            text-align: left;
+            padding: 12px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--secondary-color);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.95rem;
+        }
+
+        /* Summary Section */
+        .summary-box {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f5f9;
+        }
+
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .info-badge {
+            background: #eff6ff;
+            color: #3b82f6;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .card { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>คำนวณรายได้ & OT</h1>
+        <p>จัดการข้อมูลการทำงานรายวันอย่างเป็นระบบ</p>
+    </header>
+
+    <div class="card">
+        <div class="grid">
+            <div class="form-group">
+                <label>เงินเดือนพื้นฐาน (บาท)</label>
+                <input type="number" id="salary" value="20000" placeholder="ระบุเงินเดือน">
+            </div>
+            <div class="form-group">
+                <label>ตัวคูณ OT (เท่า)</label>
+                <input type="number" id="otMultiplier" value="1.5" step="0.1">
+            </div>
+            <div class="form-group">
+                <label>เลือกวันที่ทำงาน</label>
+                <input type="date" id="workDate">
+            </div>
+        </div>
+        
+        <div class="info-badge">
+            <b>เงื่อนไขระบบ:</b> งานปกติ 07:40 - 17:25 (8.75 ชม.) | OT 17:50 - 19:50 (2 ชม.)
+        </div>
+
+        <button class="btn btn-primary" onclick="addEntry()">+ เพิ่มรายการลงตาราง</button>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0;">รายการที่บันทึก</h3>
+            <button class="btn btn-outline" onclick="clearAll()">ล้างข้อมูลทั้งหมด</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>วันที่</th>
+                        <th>งานปกติ (ชม.)</th>
+                        <th>OT (ชม.)</th>
+                        <th>รายได้รวม (บาท)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="recordList">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="summary-box">
+            <div>
+                <span style="color: var(--secondary-color);">ยอดรวมสุทธิ:</span>
+                <span id="totalDisplay" class="total-amount">0.00</span>
+                <span>บาท</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ตั้งค่าวันที่ปัจจุบันให้ในช่อง input
+    document.getElementById('workDate').valueAsDate = new Date();
+
+    let records = [];
+
+    function addEntry() {
+        const salary = parseFloat(document.getElementById('salary').value);
+        const otMultiplier = parseFloat(document.getElementById('otMultiplier').value);
+        const date = document.getElementById('workDate').value;
+
+        if (!salary || !date) {
+            alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+            return;
+        }
+
+        // Logic การคำนวณ
+        // 1. หาค่าจ้างรายชั่วโมง: เงินเดือน / 30 วัน / 8.75 ชั่วโมงทำงานปกติ
+        const hoursPerDay = 8.75; 
+        const hourlyRate = (salary / 30) / hoursPerDay;
+
+        // 2. ข้อมูลชั่วโมงงาน (ตามเงื่อนไขโจทย์)
+        const normalHours = 8.75;
+        const otHours = 2.0;
+
+        // 3. คำนวณเงิน
+        const normalPay = normalHours * hourlyRate;
+        const otPay = otHours * (hourlyRate * otMultiplier);
+        const dailyTotal = normalPay + otPay;
+
+        // บันทึกข้อมูล
+        const record = {
+            id: Date.now(),
+            date: formatDate(date),
+            normalHours: normalHours,
+            otHours: otHours,
+            total: dailyTotal
+        };
+
+        records.push(record);
+        updateTable();
+    }
+
+    function formatDate(dateString) {
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString('th-TH', options);
+    }
+
+    function updateTable() {
+        const tbody = document.getElementById('recordList');
+        const totalDisplay = document.getElementById('totalDisplay');
+        tbody.innerHTML = '';
+        
+        let grandTotal = 0;
+
+        records.forEach((item) => {
+            grandTotal += item.total;
+            const row = `
+                <tr>
+                    <td>${item.date}</td>
+                    <td>${item.normalHours}</td>
+                    <td>${item.otHours}</td>
+                    <td><b>${item.total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b></td>
+                    <td style="text-align: right;">
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="deleteEntry(${item.id})">ลบ</button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+
+        totalDisplay.innerText = grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function deleteEntry(id) {
+        records = records.filter(r => r.id !== id);
+        updateTable();
+    }
+
+    function clearAll() {
+        if(confirm("คุณต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?")) {
+            records = [];
+            updateTable();
+        }
+    }
+</script>
+
+</body>
+</html>
